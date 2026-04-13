@@ -2,13 +2,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
-
 import 'fcm_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  debugPrint("Background message: ${message.notification?.title}");
 }
 
 void main() async {
@@ -26,7 +24,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: const HomePage());
+    return const MaterialApp(home: HomePage());
   }
 }
 
@@ -41,22 +39,17 @@ class _HomePageState extends State<HomePage> {
   final FCMService _fcmService = FCMService();
 
   String title = "Waiting for message...";
-  String body = "No data yet..";
+  String body = "No data yet";
   String token = "";
 
   @override
   void initState() {
     super.initState();
-
     _initFCM();
   }
 
   Future<void> _initFCM() async {
-    token = await _fcmService.getToken() ?? "";
-
-    debugPrint("FCM TOKEN: $token");
-
-    _fcmService.initialize(
+    await _fcmService.initialize(
       onData: (message) {
         setState(() {
           title = message.notification?.title ?? "No title";
@@ -64,6 +57,12 @@ class _HomePageState extends State<HomePage> {
         });
       },
     );
+
+    final t = await _fcmService.getToken();
+
+    setState(() {
+      token = t ?? "Failed to get token";
+    });
   }
 
   @override
@@ -75,7 +74,7 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Latest Message:", style: TextStyle(fontSize: 18)),
+            const Text("Latest Message:"),
             const SizedBox(height: 10),
             Text("Title: $title"),
             Text("Body: $body"),
